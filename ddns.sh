@@ -2,33 +2,34 @@
 # CF DDNS
 
 #这里填写区域ID
-zone_id=你的域名区域ID
+zone_id=当前域名的区域ID
 #API Bearer密钥,在 https://dash.cloudflare.com/profile/api-tokens 创建编辑区域 DNS
 bearer=你的Bearer密钥
 #需要修改DNS的域名
-domain=xxx.xxx.com
+domain=完整域名
 #DDNS IP类型ipv4,ipv6,默认是ipv4
 ips=ipv4
 
 function cloudflaredns(){
-zone_info=$(curl -s "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" -H "Authorization: Bearer $bearer" | sed -e 's/{/\n/g' -e 's/"proxiable"/\n/g' | grep zone_id | awk -F\" '{print $4","$16","$20","$24}' | grep $domain)
+id=$(curl -s "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" -H "Authorization: Bearer $bearer" | sed -e 's/{/\n/g' -e 's/"proxiable"/\n/g' | grep zone_id | awk -F\" '{print $4" "$16" "$20}' | grep -w $domain | awk '{print $1}')
 if [ $(echo $1 | grep : | wc -l) == 0 ]
 then
 	iptype=A
 else
 	iptype=AAAA
 fi
-if [ $(echo $zone_info | grep $domain | wc -l) == 0 ]
+if [ -z "$id" ]
 then
 	echo "创建域名 $domain $iptype记录"
-	curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$ip"'","ttl":1,"proxied":false}'
+	curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$1"'","ttl":1,"proxied":false}'
 else
 	echo "更新域名 $domain $iptype记录"
-	curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$(echo $zone_info | cut -d, -f1)" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$1"'","ttl":1,"proxied":false}'
+	curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$id" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$1"'","ttl":1,"proxied":false}'
 fi
 }
 
 a="$(curl --$ips -s https://www.cloudflare-cn.com/cdn-cgi/trace | grep ip= | cut -f 2- -d'=')"
+cloudflaredns $a
 while true
 do
 	sleep 5
