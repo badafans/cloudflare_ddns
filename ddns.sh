@@ -40,6 +40,18 @@ do
 	elif [ "$b" != "" ]
 	then
 		cloudflaredns $b
+		while true
+		do
+			c="$(curl -s "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" -H "Authorization: Bearer $bearer" | sed -e 's/{/\n/g' -e 's/"proxiable"/\n/g' | grep zone_id | awk -F\" '{print $4" "$16" "$20" "$24}' | grep -w $domain | awk '{print $4}')"
+			if [ "$b" == "$c" ]
+			then
+				echo "公网IP更新成功"
+				break
+			else
+				echo "重新请求更新公网IP"
+				cloudflaredns $b
+			fi
+		done
 		#这里支持pushplsh微信推送,注释下方curl前面的#号并填写pushplus密钥启用
 		#curl --location --request POST 'https://www.pushplus.plus/send' --header 'Content-Type: application/json' --data-raw '{"token":"你的pushplus密钥","title":"公网IP地址已更新","content":"当前公网IP '"$b"'","template":"txt"}'
 		a="$b"
