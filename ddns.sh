@@ -21,10 +21,10 @@ fi
 if [ -z "$id" ]
 then
 	echo "创建域名 $domain $iptype记录"
-	curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$1"'","ttl":1,"proxied":false}'
+	curl -s -X POST "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$1"'","ttl":60,"proxied":false}'
 else
 	echo "更新域名 $domain $iptype记录"
-	curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$id" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$1"'","ttl":1,"proxied":false}'
+	curl -s -X PUT "https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$id" -H "Authorization: Bearer $bearer" -H "Content-Type:application/json" --data '{"type":"'"$iptype"'","name":"'"$domain"'","content":"'"$1"'","ttl":60,"proxied":false}'
 fi
 }
 
